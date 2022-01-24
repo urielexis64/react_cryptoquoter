@@ -1,5 +1,6 @@
 import {useEffect, useState} from "react";
 import styled from "@emotion/styled";
+import Error from "./Error";
 import useSelectCurrency from "../hooks/useSelectCurrency";
 import {currencies} from "../data/currencies";
 
@@ -22,8 +23,9 @@ const InputSubmit = styled.input`
 	}
 `;
 
-const Form = () => {
+const Form = ({setCurrencies}) => {
 	const [cryptos, setCryptos] = useState([]);
+	const [error, setError] = useState(false);
 	const [currency, SelectCurrency] = useSelectCurrency("Select your currency", currencies);
 	const [cryptocurrency, SelectCryptocurrency] = useSelectCurrency(
 		"Select your cryptocurrency",
@@ -35,7 +37,6 @@ const Form = () => {
 			const url = `https://min-api.cryptocompare.com/data/top/mktcapfull?limit=10&tsym=USD`;
 			const res = await fetch(url);
 			const data = await res.json();
-			console.log(data);
 
 			const cryptos = data.Data.map((crypto) => ({
 				id: crypto.CoinInfo.Name,
@@ -47,12 +48,29 @@ const Form = () => {
 		getAPI();
 	}, []);
 
+	const handleSubmit = (e) => {
+		e.preventDefault();
+
+		if ([cryptocurrency, currency].includes("")) {
+			setError(true);
+			return;
+		}
+		setError(false);
+		setCurrencies({
+			currency,
+			cryptocurrency,
+		});
+	};
+
 	return (
-		<form>
-			<SelectCurrency />
-			<SelectCryptocurrency />
-			<InputSubmit type='submit' value='Quote' />
-		</form>
+		<>
+			{error && <Error>All fields are required</Error>}
+			<form onSubmit={handleSubmit}>
+				<SelectCurrency />
+				<SelectCryptocurrency />
+				<InputSubmit type='submit' value='Quote' />
+			</form>
+		</>
 	);
 };
 
